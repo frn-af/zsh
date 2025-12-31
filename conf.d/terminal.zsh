@@ -13,83 +13,9 @@ function _load_completions() {
     fi
 }
 
-function _dedup_zsh_plugins {
-    unset -f _dedup_zsh_plugins
-    # Oh-my-zsh installation path
-    zsh_paths=(
-        "$HOME/.oh-my-zsh"
-        "/usr/local/share/oh-my-zsh"
-        "/usr/share/oh-my-zsh"
-    )
-    for zsh_path in "${zsh_paths[@]}"; do [[ -d $zsh_path ]] && export ZSH=$zsh_path && break; done
-    # Load Plugins
-    hyde_plugins=(git zsh-256color zsh-autosuggestions zsh-syntax-highlighting)
-    plugins+=("${plugins[@]}" "${hyde_plugins[@]}")
-    # Deduplicate plugins
-    plugins=("${plugins[@]}")
-    plugins=($(printf "%s\n" "${plugins[@]}" | sort -u))
-    # Defer oh-my-zsh loading until after prompt appears
-    typeset -g DEFER_OMZ_LOAD=1
-}
 
-function _defer_omz_after_prompt_before_input() {
 
-    [[ -r $ZSH/oh-my-zsh.sh ]] && source $ZSH/oh-my-zsh.sh
-    #! Never load time consuming functions here
 
-    # Add your completions directory to fpath
-    fpath=($ZDOTDIR/completions "${fpath[@]}")
-
-    _load_compinit
-    _load_functions
-    _load_completions
-
-    # zsh-autosuggestions won't work on first prompt when deferred
-    if typeset -f _zsh_autosuggest_start >/dev/null; then
-        _zsh_autosuggest_start
-    fi
-
-    chmod +r $ZDOTDIR/.zshrc # Make sure .zshrc is readable
-    [[ -r $ZDOTDIR/.zshrc ]] && source $ZDOTDIR/.zshrc
-}
-
-function _load_deferred_plugin_system_by_hyde() {
-
-    # Exit early if HYDE_ZSH_DEFER is not set to 1
-    if [[ "${HYDE_ZSH_DEFER}" != "1" ]]; then
-        unset -f _load_deferred_plugin_system_by_hyde
-        return
-    fi
-
-    # Defer oh-my-zsh loading until after prompt appears
-    # Load oh-my-zsh when line editor initializes // before user input
-    if [[ -n $DEFER_OMZ_LOAD ]]; then
-        unset DEFER_OMZ_LOAD
-        [[ ${VSCODE_INJECTION} == 1 ]] || chmod -r $ZDOTDIR/.zshrc # let vscode read .zshrc
-        zle -N zle-line-init _defer_omz_after_prompt_before_input  # Loads when the line editor initializes // The best option
-    fi
-    #  Below this line are the commands that are executed after the prompt appears
-
-    # autoload -Uz add-zsh-hook
-    # add-zsh-hook zshaddhistory load_omz_deferred # loads after the first command is added to history
-    # add-zsh-hook precmd load_omz_deferred # Loads when shell is ready to accept commands
-    # add-zsh-hook preexec load_omz_deferred # Loads before the first command executes
-
-    # TODO: add handlers in pm.sh
-    # for these aliases please manually add the following lines to your .zshrc file.(Using yay as the aur helper)
-    # pc='yay -Sc' # remove all cached packages
-    # po='yay -Qtdq | ${PM_COMMAND[@]} -Rns -' # remove orphaned packages
-
-    # zsh-autosuggestions won't work on first prompt when deferred
-    if typeset -f _zsh_autosuggest_start >/dev/null; then
-        _zsh_autosuggest_start
-    fi
-
-    # Some binds won't work on first prompt when deferred
-    bindkey '\e[H' beginning-of-line
-    bindkey '\e[F' end-of-line
-
-}
 
 function do_render {
     # Check if the terminal supports images
@@ -182,28 +108,14 @@ fi
 _load_compinit
 
 if [[ ${HYDE_ZSH_NO_PLUGINS} != "1" ]]; then
-    _dedup_zsh_plugins
-    if [[ "$HYDE_ZSH_OMZ_DEFER" == "1" ]] && [[ -r $ZSH/oh-my-zsh.sh ]]; then
-        # Loads the buggy deferred oh-my-zsh plugin system by HyDE // This is only for oh-my-zsh and compatibility
-        _load_deferred_plugin_system_by_hyde
-        _load_prompt # This disables transient prompts sadly
-    elif source $ZDOTDIR/plugin.zsh >/dev/null 2>&1; then
-        # Load plugins from the user's plugin.zsh file
-        # This is useful for users who want to use their own plugin system
+    # Load plugins from plugin.zsh (Zinit)
+    if source $ZDOTDIR/plugin.zsh >/dev/null 2>&1; then
         source $ZDOTDIR/plugin.zsh
         _load_prompt
         _load_functions
         _load_completions
-    elif [[ -r $ZSH/oh-my-zsh.sh ]]; then
-        # Load oh-my-zsh if it exists in the ZSH directory
-        #  Default if the $ZDOTDIR/plugin.zsh file does not exist or returns an error
-        source $ZSH/oh-my-zsh.sh
-        _load_prompt
-        _load_functions
-        _load_completions
     else
-        echo "No plugin system found. Please install a plugin system or create a $ZDOTDIR/plugin.zsh file."
-        echo "You can use $ZDOTDIR/plugin.zsh file to load your own plugins."
+        echo "No plugin system found. Please create a $ZDOTDIR/plugin.zsh file."
     fi
 else
     # Load user plugins if they exist
