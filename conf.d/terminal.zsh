@@ -13,10 +13,6 @@ function _load_completions() {
     fi
 }
 
-
-
-
-
 function do_render {
     # Check if the terminal supports images
     local type="${1:-image}"

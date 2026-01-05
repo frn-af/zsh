@@ -46,8 +46,8 @@ zinit light zsh-users/zsh-autosuggestions
 zinit light zdharma-continuum/fast-syntax-highlighting
 
 # Snippet: Useful Zsh functions
-# Loads a collection of handy Zsh functions from a Gist.
-zinit snippet https://gist.githubusercontent.com/hightemp/5071909/raw/
+# Disabled: This gist defined `alias go='git checkout'` which conflicts with the Go programming language
+# zinit snippet https://gist.githubusercontent.com/hightemp/5071909/raw/
 
 # Plugin: z (rupa/z)
 # Enables quick directory jumping based on your usage history.

@@ -5,6 +5,19 @@
 # Enable auto-cd (type directory name to cd into it)
 setopt AUTO_CD
 
+#ls variants aliases
+alias la='ls -A'
+alias l='ls -alFtr'
+alias lsd='ls -d .*'
+alias ll='ls -alF'
+
+#mac ports
+alias brewi='brew install'
+alias brews='brew search'
+alias porti='sudo port install'
+alias ports='port search'
+
+
 # Git aliases
 alias g='git'
 
@@ -45,3 +58,4 @@ export EDITOR=agy
 export BUN_INSTALL="$HOME/.bun"
 export PATH="$BUN_INSTALL/bin:$PATH"
 [ -s "/Users/frnaf/.bun/_bun" ] && source "/Users/frnaf/.bun/_bun"
+
